@@ -1,21 +1,48 @@
 import { createClient } from '@supabase/supabase-js';
 
 // Configuración de Supabase
-// IMPORTANTE: Reemplazar con tus credenciales reales de Supabase
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://your-project.supabase.co';
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'your-anon-key';
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
-// Funciones de utilidad para proyectos
+// =============================================
+// API DE PROYECTOS
+// =============================================
 export const projectsApi = {
-  // Obtener todos los proyectos
+  // Obtener todos los proyectos con sus imágenes
   async getAll() {
     const { data, error } = await supabase
       .from('projects')
-      .select('*')
+      .select(`
+        *,
+        project_images (
+          id,
+          image_url,
+          display_order
+        )
+      `)
       .order('created_at', { ascending: false });
-    
+
+    if (error) throw error;
+    return data;
+  },
+
+  // Obtener un proyecto por ID con sus imágenes
+  async getById(id) {
+    const { data, error } = await supabase
+      .from('projects')
+      .select(`
+        *,
+        project_images (
+          id,
+          image_url,
+          display_order
+        )
+      `)
+      .eq('id', id)
+      .single();
+
     if (error) throw error;
     return data;
   },
@@ -24,10 +51,17 @@ export const projectsApi = {
   async getFeatured() {
     const { data, error } = await supabase
       .from('projects')
-      .select('*')
+      .select(`
+        *,
+        project_images (
+          id,
+          image_url,
+          display_order
+        )
+      `)
       .eq('featured', true)
       .order('created_at', { ascending: false });
-    
+
     if (error) throw error;
     return data;
   },
@@ -39,7 +73,7 @@ export const projectsApi = {
       .insert([project])
       .select()
       .single();
-    
+
     if (error) throw error;
     return data;
   },
@@ -52,24 +86,93 @@ export const projectsApi = {
       .eq('id', id)
       .select()
       .single();
-    
+
     if (error) throw error;
     return data;
   },
 
-  // Eliminar proyecto
+  // Eliminar proyecto (las imágenes se eliminan en cascada)
   async delete(id) {
     const { error } = await supabase
       .from('projects')
       .delete()
       .eq('id', id);
-    
+
     if (error) throw error;
     return true;
+  },
+
+  // Contar proyectos
+  async count() {
+    const { count, error } = await supabase
+      .from('projects')
+      .select('*', { count: 'exact', head: true });
+
+    if (error) throw error;
+    return count || 0;
   }
 };
 
-// Funciones de utilidad para mensajes de contacto
+// =============================================
+// API DE IMÁGENES DE PROYECTOS
+// =============================================
+export const projectImagesApi = {
+  // Agregar imagen a un proyecto
+  async add(projectId, imageUrl, displayOrder = 0) {
+    const { data, error } = await supabase
+      .from('project_images')
+      .insert([{
+        project_id: projectId,
+        image_url: imageUrl,
+        display_order: displayOrder
+      }])
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data;
+  },
+
+  // Obtener imágenes de un proyecto
+  async getByProject(projectId) {
+    const { data, error } = await supabase
+      .from('project_images')
+      .select('*')
+      .eq('project_id', projectId)
+      .order('display_order', { ascending: true });
+
+    if (error) throw error;
+    return data;
+  },
+
+  // Eliminar imagen
+  async delete(imageId) {
+    const { error } = await supabase
+      .from('project_images')
+      .delete()
+      .eq('id', imageId);
+
+    if (error) throw error;
+    return true;
+  },
+
+  // Actualizar orden de imagen
+  async updateOrder(imageId, newOrder) {
+    const { data, error } = await supabase
+      .from('project_images')
+      .update({ display_order: newOrder })
+      .eq('id', imageId)
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data;
+  }
+};
+
+// =============================================
+// API DE MENSAJES DE CONTACTO
+// =============================================
 export const messagesApi = {
   // Enviar mensaje de contacto
   async create(message) {
@@ -78,7 +181,7 @@ export const messagesApi = {
       .insert([message])
       .select()
       .single();
-    
+
     if (error) throw error;
     return data;
   },
@@ -89,7 +192,7 @@ export const messagesApi = {
       .from('contact_messages')
       .select('*')
       .order('created_at', { ascending: false });
-    
+
     if (error) throw error;
     return data;
   },
@@ -102,7 +205,7 @@ export const messagesApi = {
       .eq('id', id)
       .select()
       .single();
-    
+
     if (error) throw error;
     return data;
   },
@@ -113,13 +216,55 @@ export const messagesApi = {
       .from('contact_messages')
       .delete()
       .eq('id', id);
-    
+
     if (error) throw error;
     return true;
+  },
+
+  // Contar mensajes
+  async count() {
+    const { count, error } = await supabase
+      .from('contact_messages')
+      .select('*', { count: 'exact', head: true });
+
+    if (error) throw error;
+    return count || 0;
+  },
+
+  // Contar mensajes sin leer
+  async countUnread() {
+    const { count, error } = await supabase
+      .from('contact_messages')
+      .select('*', { count: 'exact', head: true })
+      .eq('read', false);
+
+    if (error) throw error;
+    return count || 0;
   }
 };
 
-// Funciones de storage para imágenes
+// =============================================
+// API DE ESTADÍSTICAS (DASHBOARD)
+// =============================================
+export const statsApi = {
+  async getDashboardStats() {
+    const [projectsCount, messagesCount, unreadCount] = await Promise.all([
+      projectsApi.count(),
+      messagesApi.count(),
+      messagesApi.countUnread()
+    ]);
+
+    return {
+      projects: projectsCount,
+      messages: messagesCount,
+      unreadMessages: unreadCount
+    };
+  }
+};
+
+// =============================================
+// API DE STORAGE (IMÁGENES)
+// =============================================
 export const storageApi = {
   // Subir imagen
   async uploadImage(file, folder = 'projects') {
@@ -142,6 +287,7 @@ export const storageApi = {
 
   // Eliminar imagen
   async deleteImage(url) {
+    if (!url) return true;
     const path = url.split('/').slice(-2).join('/');
     const { error } = await supabase.storage
       .from('images')
@@ -152,7 +298,9 @@ export const storageApi = {
   }
 };
 
-// Funciones de autenticación
+// =============================================
+// API DE AUTENTICACIÓN
+// =============================================
 export const authApi = {
   // Login
   async signIn(email, password) {

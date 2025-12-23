@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
-import { ExternalLink } from 'lucide-react';
+import { ExternalLink, Images } from 'lucide-react';
 import { projectsApi } from '../lib/supabase';
+import ProjectGallery from './ProjectGallery';
 import './Projects.css';
 
 const categories = ['Todos', 'Edificio Corporativo', 'Centro Comercial', 'Residencial', 'Industrial', 'Institucional', 'Hotelero'];
@@ -10,6 +11,7 @@ const Projects = () => {
     const [activeCategory, setActiveCategory] = useState('Todos');
     const [filteredProjects, setFilteredProjects] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [selectedProject, setSelectedProject] = useState(null);
 
     // Cargar proyectos de Supabase
     useEffect(() => {
@@ -38,6 +40,27 @@ const Projects = () => {
             setFilteredProjects(projects.filter(p => p.category === activeCategory));
         }
     }, [activeCategory, projects]);
+
+    // Obtener imagen principal
+    const getMainImage = (project) => {
+        if (project.image_url) return project.image_url;
+        if (project.project_images && project.project_images.length > 0) {
+            return project.project_images[0].image_url;
+        }
+        return null;
+    };
+
+    // Contar total de imágenes
+    const getImageCount = (project) => {
+        let count = project.image_url ? 1 : 0;
+        count += (project.project_images || []).length;
+        return count;
+    };
+
+    // Verificar si el proyecto tiene imágenes
+    const hasImages = (project) => {
+        return getMainImage(project) !== null;
+    };
 
     return (
         <section id="proyectos" className="projects section">
@@ -80,18 +103,32 @@ const Projects = () => {
                                 style={{ animationDelay: `${index * 0.1}s` }}
                             >
                                 <div className="project-image">
-                                    {project.image_url ? (
-                                        <img src={project.image_url} alt={project.title} />
+                                    {getMainImage(project) ? (
+                                        <img src={getMainImage(project)} alt={project.title} />
                                     ) : (
                                         <div className="project-placeholder">
                                             <span>{project.category?.charAt(0) || 'P'}</span>
                                         </div>
                                     )}
+
+                                    {/* Badge de cantidad de imágenes */}
+                                    {getImageCount(project) > 1 && (
+                                        <span className="project-images-badge">
+                                            <Images size={14} />
+                                            {getImageCount(project)}
+                                        </span>
+                                    )}
+
                                     <div className="project-overlay">
-                                        <button className="project-view-btn">
-                                            <ExternalLink size={20} />
-                                            <span>Ver detalles</span>
-                                        </button>
+                                        {hasImages(project) && (
+                                            <button
+                                                className="project-view-btn"
+                                                onClick={() => setSelectedProject(project)}
+                                            >
+                                                <ExternalLink size={20} />
+                                                <span>Ver detalles</span>
+                                            </button>
+                                        )}
                                     </div>
                                 </div>
                                 <div className="project-content">
@@ -104,6 +141,14 @@ const Projects = () => {
                     </div>
                 )}
             </div>
+
+            {/* Modal de galería */}
+            {selectedProject && (
+                <ProjectGallery
+                    project={selectedProject}
+                    onClose={() => setSelectedProject(null)}
+                />
+            )}
         </section>
     );
 };

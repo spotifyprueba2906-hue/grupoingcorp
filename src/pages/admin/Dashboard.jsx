@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Routes, Route, Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { statsApi } from '../../lib/supabase';
 import {
     LayoutDashboard,
     FolderOpen,
@@ -12,18 +13,61 @@ import {
     Plus,
     Users,
     Eye,
-    TrendingUp
+    TrendingUp,
+    Loader
 } from 'lucide-react';
 import ProjectsManager from './ProjectsManager';
 import MessagesManager from './MessagesManager';
 import './Dashboard.css';
 
 const DashboardHome = () => {
-    const stats = [
-        { icon: FolderOpen, label: 'Proyectos', value: '24', color: 'primary', trend: '+3 este mes' },
-        { icon: MessageSquare, label: 'Mensajes', value: '12', color: 'secondary', trend: '5 sin leer' },
-        { icon: Eye, label: 'Visitas', value: '1,234', color: 'accent', trend: '+15% vs anterior' },
-        { icon: Users, label: 'Clientes', value: '150+', color: 'primary', trend: 'Activos' }
+    const [stats, setStats] = useState(null);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const loadStats = async () => {
+            try {
+                const data = await statsApi.getDashboardStats();
+                setStats(data);
+            } catch (error) {
+                console.error('Error cargando estadísticas:', error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        loadStats();
+    }, []);
+
+    const statCards = [
+        {
+            icon: FolderOpen,
+            label: 'Proyectos',
+            value: stats?.projects || 0,
+            color: 'primary',
+            trend: 'Total registrados'
+        },
+        {
+            icon: MessageSquare,
+            label: 'Mensajes',
+            value: stats?.messages || 0,
+            color: 'secondary',
+            trend: `${stats?.unreadMessages || 0} sin leer`
+        },
+        {
+            icon: Eye,
+            label: 'Visitas',
+            value: '--',
+            color: 'accent',
+            trend: 'Próximamente'
+        },
+        {
+            icon: Users,
+            label: 'Clientes',
+            value: '--',
+            color: 'primary',
+            trend: 'Próximamente'
+        }
     ];
 
     return (
@@ -34,21 +78,28 @@ const DashboardHome = () => {
             </div>
 
             <div className="dashboard-stats">
-                {stats.map((stat, index) => (
-                    <div key={index} className={`stat-card stat-${stat.color}`}>
-                        <div className="stat-icon">
-                            <stat.icon size={24} />
-                        </div>
-                        <div className="stat-content">
-                            <span className="stat-value">{stat.value}</span>
-                            <span className="stat-label">{stat.label}</span>
-                            <span className="stat-trend">
-                                <TrendingUp size={14} />
-                                {stat.trend}
-                            </span>
-                        </div>
+                {loading ? (
+                    <div className="stats-loading">
+                        <Loader className="spinner" size={24} />
+                        <span>Cargando estadísticas...</span>
                     </div>
-                ))}
+                ) : (
+                    statCards.map((stat, index) => (
+                        <div key={index} className={`stat-card stat-${stat.color}`}>
+                            <div className="stat-icon">
+                                <stat.icon size={24} />
+                            </div>
+                            <div className="stat-content">
+                                <span className="stat-value">{stat.value}</span>
+                                <span className="stat-label">{stat.label}</span>
+                                <span className="stat-trend">
+                                    <TrendingUp size={14} />
+                                    {stat.trend}
+                                </span>
+                            </div>
+                        </div>
+                    ))
+                )}
             </div>
 
             <div className="dashboard-quick-actions">
