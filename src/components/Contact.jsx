@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Send, Phone, Mail, MapPin, Loader2, CheckCircle, AlertCircle } from 'lucide-react';
-import { messagesApi } from '../lib/supabase';
+import { messagesApi, siteSettingsApi } from '../lib/supabase';
 import './Contact.css';
 
 const Contact = () => {
@@ -12,6 +12,23 @@ const Contact = () => {
     });
     const [status, setStatus] = useState({ type: '', message: '' });
     const [loading, setLoading] = useState(false);
+    const [settings, setSettings] = useState({
+        contact_phone: '+52 55 0000 0000',
+        contact_email: 'contacto@grupoingcor.com',
+        contact_address: 'Ciudad de México, México'
+    });
+
+    useEffect(() => {
+        const loadSettings = async () => {
+            try {
+                const data = await siteSettingsApi.getAll();
+                if (data) setSettings(prev => ({ ...prev, ...data }));
+            } catch (error) {
+                console.error('Error cargando configuración:', error);
+            }
+        };
+        loadSettings();
+    }, []);
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -88,35 +105,41 @@ const Contact = () => {
                         </p>
 
                         <div className="contact-details">
-                            <a href="tel:+525500000000" className="contact-item">
-                                <div className="contact-icon">
-                                    <Phone size={24} />
-                                </div>
-                                <div className="contact-text">
-                                    <span className="contact-label">Teléfono</span>
-                                    <span className="contact-value">+52 55 0000 0000</span>
-                                </div>
-                            </a>
+                            {settings.contact_phone && (
+                                <a href={`tel:${settings.contact_phone.replace(/\s/g, '')}`} className="contact-item">
+                                    <div className="contact-icon">
+                                        <Phone size={24} />
+                                    </div>
+                                    <div className="contact-text">
+                                        <span className="contact-label">Teléfono</span>
+                                        <span className="contact-value">{settings.contact_phone}</span>
+                                    </div>
+                                </a>
+                            )}
 
-                            <a href="mailto:contacto@grupoingcor.com" className="contact-item">
-                                <div className="contact-icon">
-                                    <Mail size={24} />
-                                </div>
-                                <div className="contact-text">
-                                    <span className="contact-label">Email</span>
-                                    <span className="contact-value">contacto@grupoingcor.com</span>
-                                </div>
-                            </a>
+                            {settings.contact_email && (
+                                <a href={`mailto:${settings.contact_email}`} className="contact-item">
+                                    <div className="contact-icon">
+                                        <Mail size={24} />
+                                    </div>
+                                    <div className="contact-text">
+                                        <span className="contact-label">Email</span>
+                                        <span className="contact-value">{settings.contact_email}</span>
+                                    </div>
+                                </a>
+                            )}
 
-                            <div className="contact-item">
-                                <div className="contact-icon">
-                                    <MapPin size={24} />
+                            {settings.contact_address && (
+                                <div className="contact-item">
+                                    <div className="contact-icon">
+                                        <MapPin size={24} />
+                                    </div>
+                                    <div className="contact-text">
+                                        <span className="contact-label">Ubicación</span>
+                                        <span className="contact-value">{settings.contact_address}</span>
+                                    </div>
                                 </div>
-                                <div className="contact-text">
-                                    <span className="contact-label">Ubicación</span>
-                                    <span className="contact-value">Ciudad de México, México</span>
-                                </div>
-                            </div>
+                            )}
                         </div>
 
                         <div className="contact-hours">
