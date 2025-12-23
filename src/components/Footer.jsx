@@ -1,9 +1,32 @@
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Phone, Mail, MapPin, Facebook, Instagram, Linkedin } from 'lucide-react';
+import { Phone, Mail, MapPin, Facebook, Instagram, Linkedin, Twitter } from 'lucide-react';
+import { siteSettingsApi } from '../lib/supabase';
 import './Footer.css';
 
 const Footer = () => {
     const currentYear = new Date().getFullYear();
+    const [settings, setSettings] = useState({
+        contact_phone: '+52 55 0000 0000',
+        contact_email: 'contacto@grupoingcor.com',
+        contact_address: 'Ciudad de México, México',
+        social_facebook: '',
+        social_instagram: '',
+        social_linkedin: '',
+        social_twitter: ''
+    });
+
+    useEffect(() => {
+        const loadSettings = async () => {
+            try {
+                const data = await siteSettingsApi.getAll();
+                if (data) setSettings(prev => ({ ...prev, ...data }));
+            } catch (error) {
+                console.error('Error cargando configuración:', error);
+            }
+        };
+        loadSettings();
+    }, []);
 
     const scrollToSection = (sectionId) => {
         const element = document.getElementById(sectionId);
@@ -11,6 +34,10 @@ const Footer = () => {
             element.scrollIntoView({ behavior: 'smooth' });
         }
     };
+
+    // Verificar si hay alguna red social configurada
+    const hasSocialLinks = settings.social_facebook || settings.social_instagram ||
+        settings.social_linkedin || settings.social_twitter;
 
     return (
         <footer className="footer">
@@ -40,17 +67,30 @@ const Footer = () => {
                             Expertos en mantenimiento integral de edificios y espacios comerciales.
                             Más de 15 años brindando soluciones profesionales.
                         </p>
-                        <div className="footer-social">
-                            <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" className="social-link">
-                                <Facebook size={20} />
-                            </a>
-                            <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" className="social-link">
-                                <Instagram size={20} />
-                            </a>
-                            <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer" className="social-link">
-                                <Linkedin size={20} />
-                            </a>
-                        </div>
+                        {hasSocialLinks && (
+                            <div className="footer-social">
+                                {settings.social_facebook && (
+                                    <a href={settings.social_facebook} target="_blank" rel="noopener noreferrer" className="social-link">
+                                        <Facebook size={20} />
+                                    </a>
+                                )}
+                                {settings.social_instagram && (
+                                    <a href={settings.social_instagram} target="_blank" rel="noopener noreferrer" className="social-link">
+                                        <Instagram size={20} />
+                                    </a>
+                                )}
+                                {settings.social_linkedin && (
+                                    <a href={settings.social_linkedin} target="_blank" rel="noopener noreferrer" className="social-link">
+                                        <Linkedin size={20} />
+                                    </a>
+                                )}
+                                {settings.social_twitter && (
+                                    <a href={settings.social_twitter} target="_blank" rel="noopener noreferrer" className="social-link">
+                                        <Twitter size={20} />
+                                    </a>
+                                )}
+                            </div>
+                        )}
                     </div>
 
                     <div className="footer-links">
@@ -78,18 +118,28 @@ const Footer = () => {
                     <div className="footer-contact">
                         <h4>Contacto</h4>
                         <ul>
-                            <li>
-                                <Phone size={16} />
-                                <a href="tel:+525500000000">+52 55 0000 0000</a>
-                            </li>
-                            <li>
-                                <Mail size={16} />
-                                <a href="mailto:contacto@grupoingcor.com">contacto@grupoingcor.com</a>
-                            </li>
-                            <li>
-                                <MapPin size={16} />
-                                <span>Ciudad de México, México</span>
-                            </li>
+                            {settings.contact_phone && (
+                                <li>
+                                    <Phone size={16} />
+                                    <a href={`tel:${settings.contact_phone.replace(/\s/g, '')}`}>
+                                        {settings.contact_phone}
+                                    </a>
+                                </li>
+                            )}
+                            {settings.contact_email && (
+                                <li>
+                                    <Mail size={16} />
+                                    <a href={`mailto:${settings.contact_email}`}>
+                                        {settings.contact_email}
+                                    </a>
+                                </li>
+                            )}
+                            {settings.contact_address && (
+                                <li>
+                                    <MapPin size={16} />
+                                    <span>{settings.contact_address}</span>
+                                </li>
+                            )}
                         </ul>
                     </div>
                 </div>

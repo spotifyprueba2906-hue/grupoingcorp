@@ -299,6 +299,60 @@ export const storageApi = {
 };
 
 // =============================================
+// API DE CONFIGURACIÓN DEL SITIO
+// =============================================
+export const siteSettingsApi = {
+  // Obtener todas las configuraciones
+  async getAll() {
+    const { data, error } = await supabase
+      .from('site_settings')
+      .select('*');
+
+    if (error) throw error;
+
+    // Convertir array a objeto para fácil acceso
+    const settings = {};
+    data?.forEach(item => {
+      settings[item.key] = item.value;
+    });
+    return settings;
+  },
+
+  // Obtener una configuración específica
+  async get(key) {
+    const { data, error } = await supabase
+      .from('site_settings')
+      .select('value')
+      .eq('key', key)
+      .single();
+
+    if (error) return null;
+    return data?.value;
+  },
+
+  // Actualizar una configuración
+  async update(key, value) {
+    const { data, error } = await supabase
+      .from('site_settings')
+      .update({ value, updated_at: new Date().toISOString() })
+      .eq('key', key)
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data;
+  },
+
+  // Actualizar múltiples configuraciones
+  async updateMany(settings) {
+    const updates = Object.entries(settings).map(([key, value]) =>
+      this.update(key, value)
+    );
+    return Promise.all(updates);
+  }
+};
+
+// =============================================
 // API DE AUTENTICACIÓN
 // =============================================
 export const authApi = {

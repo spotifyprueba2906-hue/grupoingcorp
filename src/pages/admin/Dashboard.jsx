@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import ProjectsManager from './ProjectsManager';
 import MessagesManager from './MessagesManager';
+import SettingsManager from './SettingsManager';
 import './Dashboard.css';
 
 const DashboardHome = () => {
@@ -205,7 +206,7 @@ const Dashboard = () => {
                     <Route path="dashboard" element={<DashboardHome />} />
                     <Route path="projects" element={<ProjectsManager />} />
                     <Route path="messages" element={<MessagesManager />} />
-                    <Route path="settings" element={<div className="coming-soon"><h2>Configuración</h2><p>Próximamente...</p></div>} />
+                    <Route path="settings" element={<SettingsManager />} />
                     <Route path="*" element={<DashboardHome />} />
                 </Routes>
             </main>

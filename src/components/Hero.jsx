@@ -1,7 +1,23 @@
+import { useState, useEffect } from 'react';
 import { ArrowRight, Building2, Wrench, Shield } from 'lucide-react';
+import { siteSettingsApi } from '../lib/supabase';
 import './Hero.css';
 
 const Hero = () => {
+    const [heroImage, setHeroImage] = useState('');
+
+    useEffect(() => {
+        const loadHeroImage = async () => {
+            try {
+                const image = await siteSettingsApi.get('hero_image');
+                if (image) setHeroImage(image);
+            } catch (error) {
+                console.error('Error cargando imagen del hero:', error);
+            }
+        };
+        loadHeroImage();
+    }, []);
+
     const scrollToContact = () => {
         const element = document.getElementById('contacto');
         if (element) {
@@ -79,9 +95,17 @@ const Hero = () => {
                         <span>Mantenimiento integral</span>
                     </div>
                     <div className="hero-image-container">
-                        <div className="hero-image-placeholder">
-                            <Building2 size={120} strokeWidth={1} />
-                        </div>
+                        {heroImage ? (
+                            <img
+                                src={heroImage}
+                                alt="Equipo de Grupo Ingcor"
+                                className="hero-team-image"
+                            />
+                        ) : (
+                            <div className="hero-image-placeholder">
+                                <Building2 size={120} strokeWidth={1} />
+                            </div>
+                        )}
                     </div>
                 </div>
             </div>
