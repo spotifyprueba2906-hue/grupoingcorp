@@ -65,7 +65,7 @@ const Footer = () => {
                         </Link>
                         <p className="footer-description">
                             Expertos en mantenimiento integral de edificios y espacios comerciales.
-                            Más de 15 años brindando soluciones profesionales.
+                            Más de 3 años brindando soluciones profesionales.
                         </p>
                         {hasSocialLinks && (
                             <div className="footer-social">
