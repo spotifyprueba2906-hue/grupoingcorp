@@ -2,10 +2,10 @@ import { Award, Users, Clock, CheckCircle } from 'lucide-react';
 import './About.css';
 
 const stats = [
-    { icon: Award, value: '15+', label: 'Años de experiencia' },
-    { icon: Users, value: '150+', label: 'Clientes satisfechos' },
+    { icon: Award, value: '3+', label: 'Años de experiencia' },
+    { icon: Users, value: '10+', label: 'Clientes satisfechos' },
     { icon: Clock, value: '24/7', label: 'Disponibilidad' },
-    { icon: CheckCircle, value: '500+', label: 'Proyectos completados' }
+    { icon: CheckCircle, value: '20+', label: 'Proyectos completados' }
 ];
 
 const values = [
