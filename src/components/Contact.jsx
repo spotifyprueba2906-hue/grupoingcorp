@@ -62,12 +62,18 @@ const Contact = () => {
         }
 
         try {
-            await messagesApi.create({
+            const messageData = {
                 name: formData.name.trim(),
                 email: formData.email.trim(),
                 phone: formData.phone.trim() || null,
                 message: formData.message.trim()
-            });
+            };
+
+            // Guardar mensaje en la base de datos
+            await messagesApi.create(messageData);
+
+            // Enviar notificación a Telegram (no bloqueante)
+            messagesApi.notifyTelegram(messageData);
 
             setStatus({
                 type: 'success',

@@ -240,6 +240,24 @@ export const messagesApi = {
 
     if (error) throw error;
     return count || 0;
+  },
+
+  // Enviar notificación a Telegram
+  async notifyTelegram(messageData) {
+    try {
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+      const response = await fetch(`${supabaseUrl}/functions/v1/notify-telegram`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(messageData)
+      });
+      return response.ok;
+    } catch (error) {
+      console.error('Error enviando notificación Telegram:', error);
+      return false;
+    }
   }
 };
 
