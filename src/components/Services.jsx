@@ -72,10 +72,10 @@ const Services = () => {
                             </div>
                             <h3 className="service-title">{service.title}</h3>
                             <p className="service-description">{service.description}</p>
-                            <button className="service-link">
+                            {/* <button className="service-link">
                                 <span>Más información</span>
                                 <ArrowRight size={16} />
-                            </button>
+                            </button> */}
                         </div>
                     ))}
                 </div>
