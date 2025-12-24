@@ -43,7 +43,7 @@ const Hero = () => {
                 <div className="hero-content">
                     <div className="hero-badge">
                         <Shield size={16} />
-                        <span>+15 años de experiencia</span>
+                        <span>+4 años de experiencia</span>
                     </div>
 
                     <h1 className="hero-title">
@@ -54,7 +54,7 @@ const Hero = () => {
                     <p className="hero-description">
                         En <strong>Grupo Ingcor</strong> nos especializamos en brindar soluciones
                         profesionales de mantenimiento preventivo y correctivo para edificios,
-                        oficinas, centros comerciales e instalaciones industriales.
+                        oficinas e instalaciones industriales.
                     </p>
 
                     <div className="hero-actions">
@@ -69,12 +69,12 @@ const Hero = () => {
 
                     <div className="hero-stats">
                         <div className="stat">
-                            <span className="stat-number">500+</span>
+                            <span className="stat-number">20+</span>
                             <span className="stat-label">Proyectos completados</span>
                         </div>
                         <div className="stat-divider"></div>
                         <div className="stat">
-                            <span className="stat-number">150+</span>
+                            <span className="stat-number">10+</span>
                             <span className="stat-label">Clientes satisfechos</span>
                         </div>
                         <div className="stat-divider"></div>
