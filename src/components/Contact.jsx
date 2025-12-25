@@ -32,6 +32,15 @@ const Contact = () => {
 
     const handleChange = (e) => {
         const { name, value } = e.target;
+
+        // Para el campo de teléfono, solo permitir números, espacios, +, (, ), -
+        if (name === 'phone') {
+            // Filtrar solo caracteres válidos para teléfono
+            const cleanedValue = value.replace(/[^0-9+\-\s()]/g, '');
+            setFormData(prev => ({ ...prev, [name]: cleanedValue }));
+            return;
+        }
+
         setFormData(prev => ({ ...prev, [name]: value }));
     };
 
