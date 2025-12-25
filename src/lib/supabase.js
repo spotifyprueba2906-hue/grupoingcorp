@@ -265,20 +265,98 @@ export const messagesApi = {
 };
 
 // =============================================
+// API DE VISITAS DEL SITIO
+// =============================================
+export const visitsApi = {
+  // Registrar una visita
+  async track(pagePath) {
+    try {
+      const visitorId = this.getVisitorId();
+      const { error } = await supabase
+        .from('site_visits')
+        .insert([{
+          page_path: pagePath,
+          visitor_id: visitorId,
+          user_agent: navigator.userAgent,
+          referrer: document.referrer || null
+        }]);
+
+      if (error) console.error('Error tracking visit:', error);
+    } catch (err) {
+      console.error('Error tracking visit:', err);
+    }
+  },
+
+  // Obtener o crear ID de visitante único
+  getVisitorId() {
+    let visitorId = localStorage.getItem('visitor_id');
+    if (!visitorId) {
+      visitorId = 'v_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+      localStorage.setItem('visitor_id', visitorId);
+    }
+    return visitorId;
+  },
+
+  // Contar visitas totales
+  async countTotal() {
+    const { count, error } = await supabase
+      .from('site_visits')
+      .select('*', { count: 'exact', head: true });
+
+    if (error) throw error;
+    return count || 0;
+  },
+
+  // Contar visitantes únicos (hoy)
+  async countUniqueToday() {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const { data, error } = await supabase
+      .from('site_visits')
+      .select('visitor_id')
+      .gte('created_at', today.toISOString());
+
+    if (error) throw error;
+    const uniqueVisitors = new Set(data?.map(v => v.visitor_id) || []);
+    return uniqueVisitors.size;
+  },
+
+  // Contar visitas de los últimos 7 días
+  async countLast7Days() {
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    sevenDaysAgo.setHours(0, 0, 0, 0);
+
+    const { count, error } = await supabase
+      .from('site_visits')
+      .select('*', { count: 'exact', head: true })
+      .gte('created_at', sevenDaysAgo.toISOString());
+
+    if (error) throw error;
+    return count || 0;
+  }
+};
+
+// =============================================
 // API DE ESTADÍSTICAS (DASHBOARD)
 // =============================================
 export const statsApi = {
   async getDashboardStats() {
-    const [projectsCount, messagesCount, unreadCount] = await Promise.all([
+    const [projectsCount, messagesCount, unreadCount, visitsTotal, visitsTodayUnique] = await Promise.all([
       projectsApi.count(),
       messagesApi.count(),
-      messagesApi.countUnread()
+      messagesApi.countUnread(),
+      visitsApi.countTotal().catch(() => 0),
+      visitsApi.countUniqueToday().catch(() => 0)
     ]);
 
     return {
       projects: projectsCount,
       messages: messagesCount,
-      unreadMessages: unreadCount
+      unreadMessages: unreadCount,
+      visits: visitsTotal,
+      visitsToday: visitsTodayUnique
     };
   }
 };

@@ -58,9 +58,9 @@ const DashboardHome = () => {
         {
             icon: Eye,
             label: 'Visitas',
-            value: '--',
+            value: stats?.visits || 0,
             color: 'accent',
-            trend: 'Próximamente'
+            trend: `${stats?.visitsToday || 0} únicos hoy`
         },
         {
             icon: Users,
@@ -121,14 +121,40 @@ const DashboardHome = () => {
 };
 
 const Dashboard = () => {
-    const [sidebarOpen, setSidebarOpen] = useState(true);
+    const [sidebarOpen, setSidebarOpen] = useState(window.innerWidth > 768);
+    const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
     const { user, signOut } = useAuth();
     const location = useLocation();
     const navigate = useNavigate();
 
+    // Detectar cambios de tamaño de pantalla
+    useEffect(() => {
+        const handleResize = () => {
+            const mobile = window.innerWidth <= 768;
+            setIsMobile(mobile);
+            if (!mobile) {
+                setSidebarOpen(true);
+            }
+        };
+
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
+
+    // Cerrar sidebar al navegar en móvil
+    useEffect(() => {
+        if (isMobile) {
+            setSidebarOpen(false);
+        }
+    }, [location.pathname, isMobile]);
+
     const handleLogout = async () => {
         await signOut();
         navigate('/admin/login');
+    };
+
+    const toggleSidebar = () => {
+        setSidebarOpen(!sidebarOpen);
     };
 
     const navItems = [
@@ -139,8 +165,40 @@ const Dashboard = () => {
     ];
 
     return (
-        <div className={`dashboard-layout ${sidebarOpen ? '' : 'sidebar-collapsed'}`}>
-            <aside className="dashboard-sidebar">
+        <div className={`dashboard-layout ${sidebarOpen ? 'sidebar-open' : 'sidebar-collapsed'}`}>
+            {/* Header móvil */}
+            <header className="mobile-header">
+                <button className="mobile-menu-btn" onClick={toggleSidebar}>
+                    <Menu size={24} />
+                </button>
+                <Link to="/" className="mobile-logo">
+                    <svg viewBox="0 0 50 50" className="logo-icon">
+                        <circle cx="25" cy="25" r="20" fill="none" stroke="url(#gradMobile1)" strokeWidth="3" />
+                        <circle cx="25" cy="25" r="14" fill="none" stroke="url(#gradMobile2)" strokeWidth="2" />
+                        <text x="25" y="31" textAnchor="middle" fill="#00A651" fontSize="16" fontWeight="bold">G</text>
+                        <defs>
+                            <linearGradient id="gradMobile1" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" stopColor="#00AEEF" />
+                                <stop offset="50%" stopColor="#00A651" />
+                                <stop offset="100%" stopColor="#EC008C" />
+                            </linearGradient>
+                            <linearGradient id="gradMobile2" x1="100%" y1="0%" x2="0%" y2="100%">
+                                <stop offset="0%" stopColor="#EC008C" />
+                                <stop offset="100%" stopColor="#00AEEF" />
+                            </linearGradient>
+                        </defs>
+                    </svg>
+                    <span>INGCOR</span>
+                </Link>
+                <div className="mobile-header-spacer"></div>
+            </header>
+
+            {/* Overlay para cerrar sidebar en móvil */}
+            {isMobile && sidebarOpen && (
+                <div className="sidebar-overlay" onClick={() => setSidebarOpen(false)}></div>
+            )}
+
+            <aside className={`dashboard-sidebar ${sidebarOpen ? 'open' : ''}`}>
                 <div className="sidebar-header">
                     <Link to="/" className="sidebar-logo">
                         <svg viewBox="0 0 50 50" className="logo-icon">
@@ -159,13 +217,13 @@ const Dashboard = () => {
                                 </linearGradient>
                             </defs>
                         </svg>
-                        {sidebarOpen && <span className="logo-text">INGCOR</span>}
+                        <span className="logo-text">INGCOR</span>
                     </Link>
                     <button
                         className="sidebar-toggle"
-                        onClick={() => setSidebarOpen(!sidebarOpen)}
+                        onClick={toggleSidebar}
                     >
-                        {sidebarOpen ? <X size={20} /> : <Menu size={20} />}
+                        <X size={20} />
                     </button>
                 </div>
 
@@ -177,7 +235,7 @@ const Dashboard = () => {
                             className={`nav-item ${location.pathname === item.path ? 'active' : ''}`}
                         >
                             <item.icon size={20} />
-                            {sidebarOpen && <span>{item.label}</span>}
+                            <span>{item.label}</span>
                         </Link>
                     ))}
                 </nav>
@@ -187,16 +245,14 @@ const Dashboard = () => {
                         <div className="user-avatar">
                             {user?.email?.charAt(0).toUpperCase() || 'A'}
                         </div>
-                        {sidebarOpen && (
-                            <div className="user-details">
-                                <span className="user-name">Administrador</span>
-                                <span className="user-email">{user?.email || 'admin@grupoingcor.com'}</span>
-                            </div>
-                        )}
+                        <div className="user-details">
+                            <span className="user-name">Administrador</span>
+                            <span className="user-email">{user?.email || 'admin@grupoingcor.com'}</span>
+                        </div>
                     </div>
                     <button className="logout-btn" onClick={handleLogout} title="Cerrar sesión">
                         <LogOut size={20} />
-                        {sidebarOpen && <span>Salir</span>}
+                        <span>Salir</span>
                     </button>
                 </div>
             </aside>
