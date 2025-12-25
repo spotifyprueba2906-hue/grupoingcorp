@@ -3,6 +3,58 @@ import { Send, Phone, Mail, MapPin, Loader2, CheckCircle, AlertCircle } from 'lu
 import { messagesApi, siteSettingsApi } from '../lib/supabase';
 import './Contact.css';
 
+// Configuración de límites
+const RATE_LIMIT = {
+    maxMessages: 3,         // Máximo de mensajes permitidos
+    timeWindowMs: 5 * 60 * 1000  // Ventana de tiempo: 5 minutos
+};
+
+const FIELD_LIMITS = {
+    name: 100,
+    email: 100,
+    phone: 20,
+    message: 2000
+};
+
+// Funciones de rate limiting
+const getRateLimitData = () => {
+    try {
+        const data = localStorage.getItem('contact_rate_limit');
+        return data ? JSON.parse(data) : { timestamps: [] };
+    } catch {
+        return { timestamps: [] };
+    }
+};
+
+const updateRateLimitData = (timestamps) => {
+    localStorage.setItem('contact_rate_limit', JSON.stringify({ timestamps }));
+};
+
+const checkRateLimit = () => {
+    const now = Date.now();
+    const data = getRateLimitData();
+
+    // Filtrar timestamps dentro de la ventana de tiempo
+    const recentTimestamps = data.timestamps.filter(
+        ts => now - ts < RATE_LIMIT.timeWindowMs
+    );
+
+    // Actualizar con timestamps válidos
+    updateRateLimitData(recentTimestamps);
+
+    return recentTimestamps.length < RATE_LIMIT.maxMessages;
+};
+
+const recordSubmission = () => {
+    const data = getRateLimitData();
+    const now = Date.now();
+    const recentTimestamps = data.timestamps.filter(
+        ts => now - ts < RATE_LIMIT.timeWindowMs
+    );
+    recentTimestamps.push(now);
+    updateRateLimitData(recentTimestamps);
+};
+
 const Contact = () => {
     const [formData, setFormData] = useState({
         name: '',
@@ -37,11 +89,16 @@ const Contact = () => {
         if (name === 'phone') {
             // Filtrar solo caracteres válidos para teléfono
             const cleanedValue = value.replace(/[^0-9+\-\s()]/g, '');
-            setFormData(prev => ({ ...prev, [name]: cleanedValue }));
+            // Aplicar límite de longitud
+            const limitedValue = cleanedValue.slice(0, FIELD_LIMITS.phone);
+            setFormData(prev => ({ ...prev, [name]: limitedValue }));
             return;
         }
 
-        setFormData(prev => ({ ...prev, [name]: value }));
+        // Aplicar límite de longitud para otros campos
+        const limit = FIELD_LIMITS[name] || 1000;
+        const limitedValue = value.slice(0, limit);
+        setFormData(prev => ({ ...prev, [name]: limitedValue }));
     };
 
     const handleSubmit = async (e) => {
@@ -49,11 +106,33 @@ const Contact = () => {
         setLoading(true);
         setStatus({ type: '', message: '' });
 
+        // Verificar rate limit
+        if (!checkRateLimit()) {
+            setStatus({
+                type: 'error',
+                message: 'Has enviado demasiados mensajes. Por favor espera unos minutos antes de intentar de nuevo.'
+            });
+            setLoading(false);
+            return;
+        }
+
         // Validación básica
         if (!formData.name || !formData.email || !formData.message) {
             setStatus({
                 type: 'error',
                 message: 'Por favor completa todos los campos requeridos.'
+            });
+            setLoading(false);
+            return;
+        }
+
+        // Validar longitud de campos
+        if (formData.name.length > FIELD_LIMITS.name ||
+            formData.email.length > FIELD_LIMITS.email ||
+            formData.message.length > FIELD_LIMITS.message) {
+            setStatus({
+                type: 'error',
+                message: 'Uno o más campos exceden la longitud máxima permitida.'
             });
             setLoading(false);
             return;
@@ -80,6 +159,9 @@ const Contact = () => {
 
             // Guardar mensaje en la base de datos
             await messagesApi.create(messageData);
+
+            // Registrar envío para rate limiting
+            recordSubmission();
 
             // Enviar notificación a Telegram (no bloqueante)
             messagesApi.notifyTelegram(messageData);
