@@ -66,6 +66,7 @@ const Contact = () => {
     const [loading, setLoading] = useState(false);
     const [settings, setSettings] = useState({
         contact_phone: '+52 55 0000 0000',
+        contact_office: '',
         contact_email: 'contacto@grupoingcor.com',
         contact_address: 'Ciudad de México, México'
     });
@@ -210,6 +211,18 @@ const Contact = () => {
                                     <div className="contact-text">
                                         <span className="contact-label">Teléfono</span>
                                         <span className="contact-value">{settings.contact_phone}</span>
+                                    </div>
+                                </a>
+                            )}
+
+                            {settings.contact_office && (
+                                <a href={`tel:${settings.contact_office.replace(/\s/g, '')}`} className="contact-item">
+                                    <div className="contact-icon">
+                                        <Phone size={24} />
+                                    </div>
+                                    <div className="contact-text">
+                                        <span className="contact-label">Oficina</span>
+                                        <span className="contact-value">{settings.contact_office}</span>
                                     </div>
                                 </a>
                             )}

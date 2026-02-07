@@ -21,6 +21,7 @@ const SettingsManager = () => {
     const [settings, setSettings] = useState({
         hero_image: '',
         contact_phone: '',
+        contact_office: '',
         contact_email: '',
         contact_address: '',
         social_facebook: '',
@@ -187,6 +188,19 @@ const SettingsManager = () => {
                                 value={settings.contact_phone}
                                 onChange={(e) => handleChange('contact_phone', e.target.value)}
                                 placeholder="+52 55 1234 5678"
+                            />
+                        </div>
+
+                        <div className="settings-field">
+                            <label>
+                                <Phone size={16} />
+                                Oficina
+                            </label>
+                            <input
+                                type="text"
+                                value={settings.contact_office}
+                                onChange={(e) => handleChange('contact_office', e.target.value)}
+                                placeholder="+52 55 9876 5432"
                             />
                         </div>
 
