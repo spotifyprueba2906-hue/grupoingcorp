@@ -29,7 +29,7 @@ const About = () => {
                         <p className="about-description">
                             Somos una empresa líder en servicios de mantenimiento integral para
                             edificios, centros comerciales, oficinas corporativas e instalaciones
-                            industriales. Con más de 15 años de experiencia, nos hemos consolidado
+                            industriales. Con más de 3 años de experiencia, nos hemos consolidado
                             como un aliado estratégico de nuestros clientes.
                         </p>
                         <p className="about-description">

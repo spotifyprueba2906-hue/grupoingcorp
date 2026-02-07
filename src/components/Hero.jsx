@@ -43,7 +43,7 @@ const Hero = () => {
                 <div className="hero-content">
                     <div className="hero-badge">
                         <Shield size={16} />
-                        <span>+4 años de experiencia</span>
+                        <span>+3 años de experiencia</span>
                     </div>
 
                     <h1 className="hero-title">
