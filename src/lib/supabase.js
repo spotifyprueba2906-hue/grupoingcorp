@@ -429,12 +429,17 @@ export const siteSettingsApi = {
     return data?.value;
   },
 
-  // Actualizar una configuración
+  // Actualizar o crear una configuración (upsert)
   async update(key, value) {
     const { data, error } = await supabase
       .from('site_settings')
-      .update({ value, updated_at: new Date().toISOString() })
-      .eq('key', key)
+      .upsert({
+        key,
+        value,
+        updated_at: new Date().toISOString()
+      }, {
+        onConflict: 'key'
+      })
       .select()
       .single();
 
